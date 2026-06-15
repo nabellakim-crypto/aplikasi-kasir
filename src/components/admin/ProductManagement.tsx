@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
 import {
   Plus, Search, Pencil, Trash2, RefreshCw, ChevronUp, ChevronDown,
-  ChevronsUpDown, PackageX, Filter,
+  ChevronsUpDown, PackageX, Filter, ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ProductImage } from '@/components/ui/product-image'
@@ -31,6 +32,8 @@ function SortIcon({ col, active, dir }: { col: SortKey; active: SortKey; dir: So
 }
 
 export function ProductManagement() {
+  const { isAdmin } = useAuth()
+
   // Data
   const { products, categories, loading, error, refetch } = useProducts()
 
@@ -150,11 +153,21 @@ export function ProductManagement() {
               {products.length} products · {categories.filter(c => c.id !== 'all').length} categories
             </p>
           </div>
-          <Button onClick={openAdd} className="gap-2 shadow-md shadow-blue-200">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Button>
+          {isAdmin && (
+            <Button onClick={openAdd} className="gap-2 shadow-md shadow-blue-200">
+              <Plus className="w-4 h-4" />
+              Add Product
+            </Button>
+          )}
         </div>
+
+        {/* Staff info bar */}
+        {!isAdmin && (
+          <div className="staff-info-bar mt-4">
+            <ShieldAlert className="w-4 h-4" />
+            Anda login sebagai Staff — akses view only. Hubungi Admin untuk mengelola produk.
+          </div>
+        )}
 
         {/* Stats row */}
         <div className="grid grid-cols-4 gap-3 mt-4">
@@ -251,7 +264,9 @@ export function ProductManagement() {
                   <TH label="Category" sortable col="category" />
                   <TH label="Price"    sortable col="price" />
                   <TH label="Stock"    sortable col="stock" />
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                  {isAdmin && (
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -296,25 +311,27 @@ export function ProductManagement() {
                         <StockBadge stock={product.stock} />
                       </td>
 
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => openEdit(product)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                          >
-                            <Pencil className="w-3 h-3" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => openDelete(product)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+                      {/* Actions (Admin only) */}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => openEdit(product)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                            >
+                              <Pencil className="w-3 h-3" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => openDelete(product)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}

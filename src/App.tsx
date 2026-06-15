@@ -4,18 +4,24 @@ import { ProductCatalog } from '@/components/pos/ProductCatalog'
 import { CartPanel } from '@/components/pos/CartPanel'
 import { ProductManagement } from '@/components/admin/ProductManagement'
 import { Dashboard } from '@/components/dashboard/Dashboard'
+import { LoginPage } from '@/components/auth/LoginPage'
+import { AuthProvider, useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 
-export default function App() {
-  const [page, setPage] = useState<AppPage>('dashboard')
+function AppContent() {
+  const { user, isAdmin } = useAuth()
+  const [page, setPage] = useState<AppPage>(isAdmin ? 'dashboard' : 'pos')
   const { items, addToCart, increase, decrease, remove, clear } = useCart()
+
+  // Not logged in — show login page
+  if (!user) return <LoginPage />
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 overflow-hidden">
       <TopBar currentPage={page} onNavigate={setPage} />
 
       <main className="flex flex-1 overflow-hidden">
-        {page === 'dashboard' && (
+        {page === 'dashboard' && isAdmin && (
           <div className="flex-1 overflow-hidden">
             <Dashboard />
           </div>
@@ -45,5 +51,13 @@ export default function App() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
